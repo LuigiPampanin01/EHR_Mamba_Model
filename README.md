@@ -55,6 +55,8 @@ python extract_P12.py
 
 ![image](https://pbs.twimg.com/media/GBeYh5dW4AA4Urp.jpg)
 
+> Non sto scherzando vi sparo
+
 ## [Transformer](https://arxiv.org/abs/1706.03762)
 
 ```bash

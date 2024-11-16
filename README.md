@@ -39,6 +39,12 @@ pip install torch_scatter --extra-index-url https://data.pyg.org/whl/torch-2.2.0
 # Run models 
 4 baseline models have been implemented in `Pytorch` and can be trained/tested on `P12`. Each has a unique set of hyperparameters that can be modified, but I've gotten the best performance by running the following commands (_Note: you should unzip the data files before running these, and change the output paths in the commands_):
 
+To unzip the data files, run the following command:
+
+```bash
+python extract_P12.py
+```
+
 `transformer` (https://arxiv.org/abs/1706.03762):
 
 `python cli.py --output_path=your/path/here --epochs=100 --batch_size=16 --model_type=transformer --dropout=0.2 --attn_dropout=0.1 --layers=3 --heads=1 --pooling=max --lr=0.0001` 

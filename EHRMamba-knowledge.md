@@ -11,3 +11,9 @@ Here are some key scripts responsible for loading and processing the dataset in 
 - [seq/_tokens.py](https://github.com/VectorInstitute/odyssey/blob/main/odyssey/data/seq/_tokens.py): Generates tokens for patient sequences.
 - [seq/_events.py](https://github.com/VectorInstitute/odyssey/blob/main/odyssey/data/seq/_events.py): Processes events for patient sequence generation.
 
+
+## How phisionet is structured?
+
+The PhysioNet 2012 dataset is structured as follows:
+- RecordID -> no embeddings, since we're treating each visit as a unique patient
+- age -> 

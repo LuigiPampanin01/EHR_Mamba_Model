@@ -114,8 +114,10 @@ class EncoderClassifierRegular(nn.Module):
             ff_dropout=dropout,
         )
 
+        #This embedding is used for the 37 time series of the pysionet
         self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in, self.sensor_axis_dim)
 
+        #Static is used for the rest of the constant variables, eg. Age.
         self.static_embedding = nn.Linear(self.static_count, self.static_out)
         self.nonlinear_merger = nn.Linear(
             self.sensor_axis_dim + self.static_out,

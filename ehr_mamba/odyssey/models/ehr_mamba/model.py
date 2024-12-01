@@ -22,12 +22,12 @@ from transformers.models.mamba.modeling_mamba import (
     MambaForCausalLM,
 )
 
-from odyssey.models.ehr_mamba.mamba_utils import (
+from ehr_mamba.odyssey.models.ehr_mamba.mamba_utils import (
     MambaForMultiHeadSequenceClassification,
     MambaForSequenceClassification,
     MambaSequenceClassifierOutput,
 )
-from odyssey.models.embeddings import MambaEmbeddingsForCEHR
+from ehr_mamba.odyssey.models.embeddings import MambaEmbeddingsForCEHR
 
 
 class MambaPretrain(pl.LightningModule):
@@ -210,7 +210,7 @@ class MambaPretrain(pl.LightningModule):
 
     def configure_optimizers(
         self,
-    ) -> Tuple[list[Any], list[dict[str, SequentialLR | str]]]:
+    ) -> Tuple[list[Any], list[dict[str, Union[SequentialLR, str]]]]:
         """Configure optimizers and learning rate scheduler."""
         optimizer = AdamW(
             self.parameters(),
@@ -470,7 +470,7 @@ class MambaFinetune(pl.LightningModule):
 
     def configure_optimizers(
         self,
-    ) -> Tuple[list[Any], list[dict[str, SequentialLR | str]]]:
+    ) -> Tuple[list[Any], list[dict[str, Union[SequentialLR, str]]]]:
         """Configure optimizers and learning rate scheduler."""
         optimizer = AdamW(
             self.parameters(),

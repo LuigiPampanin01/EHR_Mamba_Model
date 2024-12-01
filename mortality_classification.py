@@ -74,6 +74,7 @@ def train_test(
 
 
 def train(
+
     train_dataloader,
     val_dataloader,
     output_path,
@@ -87,21 +88,54 @@ def train(
     **kwargs,  
 ):
     """
-    training
+        Trains a deep learning model for mortality classification.
+    Args:
+        train_dataloader (DataLoader): DataLoader for the training dataset.
+        val_dataloader (DataLoader): DataLoader for the validation dataset.
+        output_path (str): Path to save the training logs and model checkpoints.
+        epochs (int): Number of epochs to train the model.
+        patience (int): Number of epochs to wait for improvement before early stopping.
+        device (torch.device): Device to run the model on (e.g., 'cpu' or 'cuda').
+        model_type (str): Type of model to train ('grud', 'ipnets', 'seft', 'transformer').
+        lr (float): Learning rate for the optimizer.
+        early_stop_criteria (str): Criteria for early stopping ('auroc', 'auprc', 'auprc+auroc', 'loss').
+        model_args (dict): Additional arguments for the model.
+        **kwargs: Additional keyword arguments.
+    Returns:
+        tuple: Validation loss and the trained model.
+    The function performs the following steps:
+    1. Initializes the model based on the specified `model_type`.
+    2. Sets up the optimizer and loss function.
+    3. Configures early stopping based on the specified criteria.
+    4. Initializes a CSV file to log training progress.
+    5. Iterates over the specified number of epochs:
+        - Trains the model on the training dataset.
+        - Evaluates the model on the validation dataset.
+        - Logs the training and validation losses, and validation ROC AUC score.
+        - Checks for early stopping conditions.
+    6. Saves the training curves as a JPEG image.
+    7. Returns the final validation loss and the trained model.
     """
 
-    iterable_inner_dataloader = iter(train_dataloader)
-    test_batch = next(iterable_inner_dataloader)
-    max_seq_length = test_batch[0].shape[2]
-    sensor_count = test_batch[0].shape[1]
-    static_size = test_batch[2].shape[1]
+    iterable_inner_dataloader = iter(train_dataloader) # make the train_dataloader iterable
+    test_batch = next(iterable_inner_dataloader) # iterate on the next object in a tuple
+    max_seq_length = test_batch[0].shape[2] # shape[2] = T
+    sensor_count = test_batch[0].shape[1] # shape[1] = F
+    static_size = test_batch[2].shape[1] # shape[1] = 8
+
+    # dim(test_batch[0]) = (N, F, T) values
+    # dim(test_batch[1]) = (N, T) time
+    # dim(test_batch[2]) = (N, S = 8) static attrinutes
+    # dim(test_batch[3]) = (N) labels
+    # dim(test_batch[4]) = (N, F, T) mask
+    # dim(test_batch[5]) = (N, F, T) delta
 
     # make a new model and train
     if model_type == "grud":
         model = GRUDModel(
             input_dim=sensor_count,
             static_dim=static_size,
-            output_dims=2,
+            output_dims=2, # mortality or not mortality
             device=device,
             **model_args
         )
@@ -159,7 +193,7 @@ def train(
                 times = times.to(device)
                 mask = mask.to(device)
                 delta = delta.to(device)
-
+            
             optimizer.zero_grad()
 
             predictions = model(

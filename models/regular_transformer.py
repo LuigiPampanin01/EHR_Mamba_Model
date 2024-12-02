@@ -6,12 +6,27 @@ from x_transformers import Encoder
 
 def masked_mean_pooling(datatensor, mask):
     """
-    Adapted from HuggingFace's Sentence Transformers:
-    https://github.com/UKPLab/sentence-transformers/
-    Calculate masked average for final dimension of tensor
+    Computes the masked mean pooling of the input tensor along the specified dimension.
+
+    This function calculates the average of the values in the input tensor `datatensor` 
+    while ignoring the values at positions where the `mask` tensor is zero. It is 
+    particularly useful for handling sequences of varying lengths where padding is 
+    applied.
+
+    Args:
+        datatensor (torch.Tensor): The input tensor of shape (batch_size, feature_dim, lenght_time).
+        mask (torch.Tensor): A binary mask tensor of shape (batch_size, sequence_length) 
+                             where 1 indicates valid data points and 0 indicates padding.
+
+    Returns:
+        torch.Tensor: A tensor of shape (batch_size, feature_dim) containing the masked 
+                      mean pooled values for each sequence in the batch.
     """
+ 
+ 
     # eliminate all values learned from nonexistant timepoints
-    mask_expanded = mask.unsqueeze(-1).expand(datatensor.size()).float()
+    mask_expanded = mask.unsqueeze(-1).expand(datatensor.size()).float() # Takes the mask tensor, adds an extra dimension at the end,
+    # expands it to match the size of datatensor, and converts it to a floating-point tensor.
     data_summed = torch.sum(datatensor * mask_expanded, dim=1)
 
     # find out number of existing timepoints
@@ -131,8 +146,8 @@ class EncoderClassifierRegular(nn.Module):
 
     def forward(self, x, static, time, sensor_mask, **kwargs):
 
-        x_time = torch.clone(x)  # (N, F, T)
-        x_time = torch.permute(x_time, (0, 2, 1))  # (N, T, F)
+        x_time = torch.clone(x)  # (N, T)
+        x_time = torch.permute(x_time, (0, 2, 1))  # (N, T)
         mask = (
             torch.count_nonzero(x_time, dim=2)
         ) > 0  # mask for sum of all sensors for each person/at each timepoint
@@ -143,7 +158,7 @@ class EncoderClassifierRegular(nn.Module):
         x_time = torch.cat([x_time, x_sensor_mask], axis=2)  # (N, T, 2F) #Binary
 
         # make sensor embeddings
-        x_time = self.sensor_embedding(x_time)  # (N, T, F)
+        x_time = self.sensor_embedding(x_time)  # (N, T)
 
         # add positional encodings
         pe = self.pos_encoder(time).to(self.device)  # taken from RAINDROP, (N, T, pe)

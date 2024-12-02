@@ -398,7 +398,7 @@ class MortalityDataset(Dataset):
         Parameters:
         n (int): The number of times to repeat the data.
 
-        Modifies:
+        Modifies:b 
         self.data_array: Repeats along the first dimension.
         self.times_array: Repeats along the first dimension.
         self.static_array: Repeats along the first dimension.

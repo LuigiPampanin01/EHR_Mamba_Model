@@ -167,13 +167,13 @@ def core_function(
         json.dump(
             {
                 "mean_loss": float(np.mean(accum_loss)),
-                "mean_accuracy": float(np.mean(accum_loss)),
-                "mean_auprc": float(np.mean(accum_loss)),
-                "mean_auroc": float(np.mean(accum_loss)),
+                "mean_accuracy": float(np.mean(accum_accuracy)),
+                "mean_auprc": float(np.mean(accum_auprc)),
+                "mean_auroc": float(np.mean(accum_auroc)),
                 "std_loss": float(np.std(accum_loss)),
-                "std_accuracy": float(np.std(accum_loss)),
-                "std_auprc": float(np.std(accum_loss)),
-                "std_auroc": float(np.std(accum_loss)),
+                "std_accuracy": float(np.std(accum_accuracy)),
+                "std_auprc": float(np.std(accum_auprc)),
+                "std_auroc": float(np.std(accum_auroc)),
             }, f, indent=4,
         )
 

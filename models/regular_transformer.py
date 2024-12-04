@@ -110,15 +110,22 @@ class EncoderClassifierRegular(nn.Module):
 
         self.pooling = pooling
         self.device = device
+        # Number of sensors, eg, 37 for Physionet Albumin, ALT, AST, etc.
         self.sensors_count = sensors_count
+        # Number of static variables of the patient, Age, Gender, etc.
         self.static_count = static_count
 
+        # The input dimension of the sensors is 2 times the number of sensors
+        # Because we have a binary mask for each sensor
+        # 37 sensors, 37 binary masks = 74
         self.sensor_axis_dim_in = 2 * self.sensors_count
 
         self.sensor_axis_dim = self.sensor_axis_dim_in
+        # If the number of sensors is odd, we add one to make it even
         if self.sensor_axis_dim % 2 != 0:
             self.sensor_axis_dim += 1
 
+        #The subsequent layers may require the static_count to be 12
         self.static_out = self.static_count + 4
 
         self.attn_layers = Encoder(
@@ -129,7 +136,9 @@ class EncoderClassifierRegular(nn.Module):
             ff_dropout=dropout,
         )
 
-        #This embedding is used for the 37 time series of the pysionet
+        # This embedding is used for the 37 time series of the pysionet
+        # This is 74 because we have a binary mask for each sensor
+        # Since it's even, the output is the same as the input
         self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in, self.sensor_axis_dim)
 
         #Static is used for the rest of the constant variables, eg. Age.
@@ -138,6 +147,9 @@ class EncoderClassifierRegular(nn.Module):
             self.sensor_axis_dim + self.static_out,
             self.sensor_axis_dim + self.static_out,
         )
+
+        #This is the final layer that will be used to classify the output
+        #Dim input = 74 + 12 = (sensors + mask embedding) + (static embedding)  =  86
         self.classifier = nn.Linear(
             self.sensor_axis_dim + self.static_out, num_classes
         )
@@ -146,11 +158,26 @@ class EncoderClassifierRegular(nn.Module):
 
     def forward(self, x, static, time, sensor_mask, **kwargs):
 
-        x_time = torch.clone(x)  # (N, T)
-        x_time = torch.permute(x_time, (0, 2, 1))  # (N, T)
+        # Note that the input x is a tensor of shape (N, T, F) where:
+        # - N is the batch size,
+        # - F is the number of features.
+        # - T is the number of time points,
+
+        x_time = torch.clone(x)  # Torch.size(N, F, T)
+        x_time = torch.permute(x_time, (0, 2, 1))  # this now has shape (N, T, F)
+        
+        # TODO: Check if this is correct
+        # We take all the time points
+        # We count all non-zero values in the time points on the 2nd dimension aka the features (we moved it to the last dimension)
+        # We then check if the count is greater than 0
         mask = (
             torch.count_nonzero(x_time, dim=2)
         ) > 0  # mask for sum of all sensors for each person/at each timepoint
+        # mask is a tensor of shape (N, T)
+        # where N is the batch size and T is the number of time points
+        # mask is a binary tensor that is 1 if there is a non-zero value at that time point
+
+        # Keep in mind that x_time is a tensor of shape (Batch, #of registrations, #of sensors)
 
         # add indication for missing sensor values
         x_sensor_mask = torch.clone(sensor_mask)  # (N, F, T)
@@ -158,11 +185,12 @@ class EncoderClassifierRegular(nn.Module):
         x_time = torch.cat([x_time, x_sensor_mask], axis=2)  # (N, T, 2F) #Binary
 
         # make sensor embeddings
-        x_time = self.sensor_embedding(x_time)  # (N, T)
+        x_time = self.sensor_embedding(x_time)  # (N, T, 2F)
 
         # add positional encodings
         pe = self.pos_encoder(time).to(self.device)  # taken from RAINDROP, (N, T, pe)
         x_time = torch.add(x_time, pe)  # (N, T, F) (N, F)
+        # note by sav x_time has still shape (N, T, 2F)
 
         # run  attention
         x_time = self.attn_layers(x_time, mask=mask)

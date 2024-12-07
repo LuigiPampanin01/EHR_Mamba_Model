@@ -92,7 +92,7 @@ class MambaEmbedding(nn.Module):
         # Define the time embedding layer
         self.time_embedding = TimeEmbedding(self.sensor_axis_dim_in)
 
-    def forward(self, data, static, times, mask):
+    def forward(self, x, static, times, mask):
         """
         Args:
             data (torch.Tensor): Input tensor of shape (N, F, T)
@@ -104,7 +104,7 @@ class MambaEmbedding(nn.Module):
             torch.Tensor: Encoded output tensor
         """
 
-        x_time = torch.clone(data)  # Torch.size(N, F, T)
+        x_time = torch.clone(x)  # Torch.size(N, F, T)
         x_time = torch.permute(x_time, (0, 2, 1)) # this now has shape (N, T, F)
 
         x_sensor_mask = torch.clone(mask)  # (N, F, T)
@@ -147,7 +147,9 @@ class CustomMambaModel(nn.Module):
         static_size=8, 
         sensor_count=37, 
         embedding_dim=86, 
-        d_model=86):
+        d_model=86,
+        **kwargs
+        ):
 
         super().__init__()
 
@@ -172,12 +174,14 @@ class CustomMambaModel(nn.Module):
         self.head = ClassificationHead(input_dim=d_model, num_classes=num_classes)
         self.mamba_model = TransformersMambaModel(self.mamba_config)
     
-    def forward(self, data, static, times, mask):
-        embeddings = self.embedding(data, static, times, mask)
+    def forward(self, x, static, time, sensor_mask, **kwargs):
+        embeddings = self.embedding(x, static, time, sensor_mask)
 
         mamba_output = self.mamba_model(inputs_embeds=embeddings)
         last_hidden_state = mamba_output.last_hidden_state  # Shape: [batch_size, sequence_length, d_model]
 
+        print("Hey i'm in the forward")
+        
         # Pool the sequence embeddings (e.g., mean pooling)
         pooled_output = last_hidden_state.mean(dim=1)  # Shape: [batch_size, d_model]
 

@@ -103,9 +103,6 @@ class MambaEmbedding(nn.Module):
         self.embedding_dim = embedding_dim
         self.max_seq_length = max_seq_length
 
-        #For now the embedding_dim is the same as the sensor_count
-        self.embedding_dim = sensor_count
-
         self.sensor_axis_dim_in = 2 * self.sensor_count # 2 * 37 = 74
 
         # Define the sensor embedding layer
@@ -120,10 +117,10 @@ class MambaEmbedding(nn.Module):
         self.static_embedding = nn.Linear(static_size, self.static_out)
 
         # Define the non-linear merger layer
-        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, self.sensor_axis_dim_in + self.static_out)
+        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, embedding_dim)
 
         # Define the time embedding layer
-        self.time_embedding = TimeEmbedding(74)
+        self.time_embedding = TimeEmbedding(embedding_dim)
 
     def forward(self, data, static, times, mask):
         """

@@ -171,8 +171,6 @@ def train(
             num_classes=2,
             static_size=static_size,
             sensor_count=sensor_count,
-            embedding_dim=86,
-            d_model=86,
             **model_args
         )
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
@@ -242,7 +240,6 @@ def train(
                 predictions = model(
                     x=data, static=static, time=times, sensor_mask=mask, delta=delta
                 )
-                print("Predictions", predictions)
                 if type(predictions) == tuple:
                     predictions, _ = predictions
                 predictions = predictions.squeeze(-1)

@@ -82,6 +82,11 @@ python cli.py --output_path=your/path/here --model_type=grud --epochs=100 --batc
 python cli.py --output_path=your/path/here --model_type=ipnets --epochs=100 --batch_size=32 --lr=0.001 --ipnets_imputation_stepsize=1 --ipnets_reconst_fraction=0.75 --recurrent_dropout=0.3 --recurrent_n_units=32
 ```
 
+## [Mamba]()
+
+```bash
+python cli.py --batch_size=2 --epochs=2 --model_type="mamba" --output_path=./
+```
 
 # DIY
 You are welcome to fork the repository and make your own modifications :) 

@@ -23,14 +23,23 @@ sensor_mask = torch.randint(0, 2, (batch_size, num_sensors, num_time_points))
 # Create an instance of the Mamba_P12 class
 model = CustomMambaModel(max_seq_length=num_time_points)
 
+model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+params = sum([np.prod(p.size()) for p in model_parameters])
+print(f"# of trainable parameters: {params}")
+
 output = model(data, static, time, sensor_mask)
 
 # Print the output
 print("Output shape:", output.shape)
-print("Output:", output)
+#print("Output:", output)
 
 predictions = output.squeeze(-1)
 
 print("Predictions shape:", predictions.shape)
-print("Predictions:", predictions)
+#print("Predictions:", predictions)
 
+model.eval()
+
+output = model(data, static, time, sensor_mask)
+
+print(output)

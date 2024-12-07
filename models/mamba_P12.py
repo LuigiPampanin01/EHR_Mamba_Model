@@ -40,8 +40,8 @@ class TimeEmbedding(nn.Module):
             torch.Tensor: Combined time embeddings of shape [batch_size, seq_len, d_model].
         """
         # Normalize timestamps to range [0, 1]
-        timestamps_normalized = timestamps / timestamps.max(dim=1, keepdim=True).values
-
+        timestamps_normalized = timestamps / (timestamps.max(dim=1, keepdim=True).values + 1e-8)
+        
         # Learnable continuous time embeddings
         continuous_embeddings = self.time_embedding_layer(timestamps_normalized.unsqueeze(-1))  # [batch_size, seq_len, d_model]
 
@@ -70,14 +70,10 @@ class MambaEmbedding(nn.Module):
         self.embedding_dim = embedding_dim
         self.max_seq_length = max_seq_length
 
-        #For now the embedding_dim is the same as the sensor_count
-        self.embedding_dim = sensor_count
-
         self.sensor_axis_dim_in = 2 * self.sensor_count # 2 * 37 = 74
 
         # Define the sensor embedding layer
         self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in , self.sensor_axis_dim_in)
-
 
         # Define the static embedding layer
 
@@ -87,7 +83,7 @@ class MambaEmbedding(nn.Module):
         self.static_embedding = nn.Linear(static_size, self.static_out)
 
         # Define the non-linear merger layer
-        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, self.sensor_axis_dim_in + self.static_out)
+        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, self.embedding_dim)
 
         # Define the time embedding layer
         self.time_embedding = TimeEmbedding(self.sensor_axis_dim_in)
@@ -107,6 +103,11 @@ class MambaEmbedding(nn.Module):
         x_time = torch.clone(x)  # Torch.size(N, F, T)
         x_time = torch.permute(x_time, (0, 2, 1)) # this now has shape (N, T, F)
 
+
+        mask_handmade = (
+            torch.count_nonzero(x_time, dim=2)
+        ) > 0 
+
         x_sensor_mask = torch.clone(mask)  # (N, F, T)
         x_sensor_mask = torch.permute(x_sensor_mask, (0, 2, 1))  # (N, T, F)
 
@@ -117,8 +118,11 @@ class MambaEmbedding(nn.Module):
         # make sensor embeddings
         x_time = self.sensor_embedding(x_time)
 
-        # add positional encodings
-        x_time = x_time + self.time_embedding(times)
+
+        time_emb = self.time_embedding(times, mask_handmade)
+
+       # add positional encodings
+        x_time = x_time + time_emb
 
         # make static embeddings
         static = self.static_embedding(static)
@@ -162,8 +166,7 @@ class CustomMambaModel(nn.Module):
      
 
         self.mamba_config = MambaConfig(
-            d_model=d_model,
-            hidden_size=86,
+            hidden_size=d_model,
             num_hidden_layers=1,
             num_attention_heads=1,
             intermediate_size=128,

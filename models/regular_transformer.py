@@ -141,15 +141,16 @@ class EncoderClassifierRegular(nn.Module):
         # Since it's even, the output is the same as the input
         self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in, self.sensor_axis_dim)
 
-        #Static is used for the rest of the constant variables, eg. Age.
+        # Static is used for the rest of the constant variables, eg. Age.
         self.static_embedding = nn.Linear(self.static_count, self.static_out)
+        # 74 + 12 = = 86
         self.nonlinear_merger = nn.Linear(
             self.sensor_axis_dim + self.static_out,
             self.sensor_axis_dim + self.static_out,
         )
 
-        #This is the final layer that will be used to classify the output
-        #Dim input = 74 + 12 = (sensors + mask embedding) + (static embedding)  =  86
+        # This is the final layer that will be used to classify the output
+        # Dim input = 74 + 12 = (sensors + mask embedding) + (static embedding)  =  86
         self.classifier = nn.Linear(
             self.sensor_axis_dim + self.static_out, num_classes
         )
@@ -167,9 +168,6 @@ class EncoderClassifierRegular(nn.Module):
         x_time = torch.permute(x_time, (0, 2, 1))  # this now has shape (N, T, F)
         
         # TODO: Check if this is correct
-        # We take all the time points
-        # We count all non-zero values in the time points on the 2nd dimension aka the features (we moved it to the last dimension)
-        # We then check if the count is greater than 0
         mask = (
             torch.count_nonzero(x_time, dim=2)
         ) > 0  # mask for sum of all sensors for each person/at each timepoint

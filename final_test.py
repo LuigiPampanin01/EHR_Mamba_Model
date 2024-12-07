@@ -51,7 +51,7 @@ class MambaEmbedding(nn.Module):
         #For now the embedding_dim is the same as the sensor_count
         self.embedding_dim = sensor_count
 
-        self.sensor_axis_dim_in = 2 * self.sensors_count # 2 * 37 = 74
+        self.sensor_axis_dim_in = 2 * self.sensor_count # 2 * 37 = 74
 
         # Define the sensor embedding layer
         self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in , self.sensor_axis_dim_in)
@@ -65,7 +65,7 @@ class MambaEmbedding(nn.Module):
         self.static_embedding = nn.Linear(static_size, self.static_out)
 
         # Define the non-linear merger layer
-        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim + self.static_out, self.sensor_axis_dim + self.static_out)
+        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, self.sensor_axis_dim_in + self.static_out)
 
     def forward(self, data, static, times, mask):
         """
@@ -94,7 +94,8 @@ class MambaEmbedding(nn.Module):
 
         # make static embeddings
         static = self.static_embedding(static)
-        x_merged = torch.cat((x_time, static), axis=1)
+        static_expanded = static.unsqueeze(1).repeat(1, x_time.shape[1], 1)
+        x_merged = torch.cat((x_time, static_expanded), axis=-1)
 
         # Merge the embeddings
         combined = self.nonlinear_merger(x_merged).relu()

@@ -70,8 +70,10 @@ for epoch in range(100):  # Number of epochs
         # Unpack batch
         data, times, static, labels, mask, delta = batch
 
-        print(data.shape)
-        print(mask.shape)
+        print(f"Data has shape: {data.shape}")
+        print(f"Times has shape: {times.shape}")
+        print(f"Static has shape: {static.shape}")
+        print(f"Mask has shape: {mask.shape}")
         break
 
         

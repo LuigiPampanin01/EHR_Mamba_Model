@@ -164,9 +164,9 @@ class CustomMambaModel(nn.Module):
         self.mamba_config = MambaConfig(
             d_model=d_model,
             hidden_size=86,
-            num_hidden_layers=16,
-            num_attention_heads=16,
-            intermediate_size=256,
+            num_hidden_layers=1,
+            num_attention_heads=1,
+            intermediate_size=128,
             max_position_embeddings=max_seq_length,
             dropout=0.1
         )
@@ -179,8 +179,6 @@ class CustomMambaModel(nn.Module):
 
         mamba_output = self.mamba_model(inputs_embeds=embeddings)
         last_hidden_state = mamba_output.last_hidden_state  # Shape: [batch_size, sequence_length, d_model]
-
-        print("Hey i'm in the forward")
         
         # Pool the sequence embeddings (e.g., mean pooling)
         pooled_output = last_hidden_state.mean(dim=1)  # Shape: [batch_size, d_model]

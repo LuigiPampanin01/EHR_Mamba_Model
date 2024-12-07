@@ -223,6 +223,8 @@ def train(
             optimizer.step()
         accum_loss = np.mean(loss_list)
 
+        print("Loss is", accum_loss)
+
         # validation step
         model.eval().to(device)
         labels_list = torch.LongTensor([])
@@ -240,13 +242,16 @@ def train(
                 predictions = model(
                     x=data, static=static, time=times, sensor_mask=mask, delta=delta
                 )
+                print("Predictions", predictions)
                 if type(predictions) == tuple:
                     predictions, _ = predictions
                 predictions = predictions.squeeze(-1)
                 predictions_list = torch.cat(
                     (predictions_list, predictions.cpu()), dim=0
                 )
+            print("Probs before softmax is", predictions_list)
             probs = torch.nn.functional.softmax(predictions_list, dim=1)
+            print("probs is ", probs)
             auc_score = metrics.roc_auc_score(labels_list, probs[:, 1])
             aupr_score = metrics.average_precision_score(labels_list, probs[:, 1])
 

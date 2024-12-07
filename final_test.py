@@ -151,7 +151,7 @@ class MambaEmbedding(nn.Module):
         x_time = self.sensor_embedding(x_time)
 
         # add positional encodings
-        x_time = x_time + self.time_embedding(times, mask)
+        x_time = x_time + self.time_embedding(times)
 
         # make static embeddings
         static = self.static_embedding(static)

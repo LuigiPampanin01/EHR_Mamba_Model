@@ -172,7 +172,8 @@ def train(
             static_size=static_size,
             sensor_count=sensor_count,
             embedding_dim=86,
-            d_model=86
+            d_model=86,
+            **model_args
         )
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
     params = sum([np.prod(p.size()) for p in model_parameters])

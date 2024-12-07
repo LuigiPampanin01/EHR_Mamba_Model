@@ -109,12 +109,15 @@ class MambaEmbedding(nn.Module):
 # Define Mamba Configuration
 mamba_config = MambaConfig(
     d_model=86,
+    hidden_size=86,
     num_hidden_layers=4,
     num_attention_heads=4,
     intermediate_size=256,
     max_position_embeddings=max_seq_length,
     dropout=0.1
 )
+
+print(f"Max sequence lenght is: {max_seq_length}")
 
 # # Initialize Mamba model
 mamba_model = MambaModel(mamba_config)
@@ -160,10 +163,20 @@ for epoch in range(100):  # Number of epochs
 
         print(f"Embeddings has shape: {embeddings.shape}") # (N, T, F)
 
-        mamba_output = mamba_model(embeddings)
+        mamba_output = mamba_model(inputs_embeds=embeddings)
 
-        print(f"Mamba output has shape: {mamba_output.shape}") # (N, T, F)
+        print(f"Mamba output has shape: {mamba_output.last_hidden_state.shape}") # (N, T, F)
 
+        # Extract the last hidden state
+        last_hidden_state = mamba_output.last_hidden_state  # Shape: [batch_size, sequence_length, d_model]
+
+        # Pool the sequence embeddings (e.g., mean pooling)
+        pooled_output = last_hidden_state.mean(dim=1)  # Shape: [batch_size, d_model]
+
+        # Forward pass through the classification head
+        logits = classification_head(pooled_output)  # Shape: [batch_size, num_classes]
+
+        print(f"Output is :{nn.Softmax(logits)}")
 
         break
 

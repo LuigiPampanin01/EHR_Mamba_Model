@@ -43,6 +43,8 @@ def train_test(
     # assign GPU
     if torch.cuda.is_available():
         dev = "cuda"
+    elif torch.backends.mps.is_available():
+        dev = "mps"
     else:
         dev = "cpu"
     device = torch.device(dev)

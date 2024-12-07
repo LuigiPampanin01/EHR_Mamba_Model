@@ -36,16 +36,87 @@ sensor_count = test_batch[0].shape[1] # shape[1] = F
 static_size = test_batch[2].shape[1] # shape[1] = 8
 
 
-#--------------------------------------------- Load data
+#--------------------------------------------- End of Load data
+
+#--------------------------------------------- Start of Embedding layer definition
+
+class MambaEmbedding(nn.Module):
+    def __init__(self, sensor_count, embedding_dim, max_seq_length, static_size = 8):
+        super(MambaEmbedding, self).__init__()
+        self.sensor_count = sensor_count
+        self.static_size = static_size
+        self.embedding_dim = embedding_dim
+        self.max_seq_length = max_seq_length
+
+        #For now the embedding_dim is the same as the sensor_count
+        self.embedding_dim = sensor_count
+
+        self.sensor_axis_dim_in = 2 * self.sensors_count # 2 * 37 = 74
+
+        # Define the sensor embedding layer
+        self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in , self.sensor_axis_dim_in)
+
+
+        # Define the static embedding layer
+
+        self.static_out = self.static_size + 4 # 8 + 4 = 12
+
+        # Define the static embedding layer
+        self.static_embedding = nn.Linear(static_size, self.static_out)
+
+        # Define the non-linear merger layer
+        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim + self.static_out, self.sensor_axis_dim + self.static_out)
+
+    def forward(self, data, static, times, mask):
+        """
+        Args:
+            data (torch.Tensor): Input tensor of shape (N, F, T)
+            static (torch.Tensor): Static features tensor of shape (N, static_size)
+            times (torch.Tensor): Time points tensor of shape (N, T)
+            mask (torch.Tensor): Mask tensor of shape (N, F, T)
+
+        Returns:
+            torch.Tensor: Encoded output tensor
+        """
+
+        x_time = torch.clone(data)  # Torch.size(N, F, T)
+        x_time = torch.permute(x_time, (0, 2, 1)) # this now has shape (N, T, F)
+
+        x_sensor_mask = torch.clone(mask)  # (N, F, T)
+        x_sensor_mask = torch.permute(x_sensor_mask, (0, 2, 1))  # (N, T, F)
+
+
+        x_time = torch.cat([x_time, x_sensor_mask], axis=2)  # (N, T, 2F) #Binary
+
+
+        # make sensor embeddings
+        x_time = self.sensor_embedding(x_time)
+
+        # make static embeddings
+        static = self.static_embedding(static)
+        x_merged = torch.cat((x_time, static), axis=1)
+
+        # Merge the embeddings
+        combined = self.nonlinear_merger(x_merged).relu()
+
+        return combined
+    
+#--------------------------------------------- End of Embedding layer definition
+
 
 
 # Define Mamba Configuration
-# mamba_config = MambaConfig(
-
-# )
+mamba_config = MambaConfig(
+    d_model=86,
+    num_hidden_layers=4,
+    num_attention_heads=4,
+    intermediate_size=256,
+    max_position_embeddings=max_seq_length,
+    dropout=0.1
+)
 
 # # Initialize Mamba model
-# mamba_model = MambaModel(mamba_config)
+mamba_model = MambaModel(mamba_config)
 
 # Define Classification Head
 class ClassificationHead(nn.Module):
@@ -56,7 +127,9 @@ class ClassificationHead(nn.Module):
     def forward(self, x):
         return self.fc(x)
 
-# classification_head = ClassificationHead(input_dim=mamba_config.d_model + 37, num_classes=2)
+classification_head = ClassificationHead(input_dim=mamba_config.d_model, num_classes=2)
+
+mamba_embedding = MambaEmbedding(sensor_count, embedding_dim=mamba_config.d_model, max_seq_length=max_seq_length, static_size=static_size)
 
 
 # Training Loop
@@ -80,6 +153,17 @@ for epoch in range(100):  # Number of epochs
         print(f"Times has shape: {times.shape}") #(N, T)
         print(f"Static has shape: {static.shape}") #(N, 8)
         print(f"Mask has shape: {mask.shape}") # (N,F,T)
+
+        # Forward pass
+        embeddings = mamba_embedding(data, static, times, mask)
+
+        print(f"Embeddings has shape: {embeddings.shape}") # (N, T, F)
+
+        mamba_output = mamba_model(embeddings)
+
+        print(f"Mamba output has shape: {mamba_output.shape}") # (N, T, F)
+
+
         break
 
         

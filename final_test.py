@@ -159,7 +159,7 @@ class MambaEmbedding(nn.Module):
         combined = self.nonlinear_merger(x_merged)
 
         # Add time embeddings
-        combined = self.time_embedding(times, mask) + combined
+        combined = self.time_embedding(times) + combined
 
         return combined
     

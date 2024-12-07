@@ -15,6 +15,7 @@ from models.early_stopper import EarlyStopping
 from models.deep_set_attention import DeepSetAttentionModel
 from models.grud import GRUDModel
 from models.ip_nets import InterpolationPredictionModel
+from models.mamba_P12 import CustomMambaModel
 
 
 def train_test(
@@ -163,6 +164,15 @@ def train(
             static_count=static_size,
             return_intermediates=False,
             **model_args
+        )
+    elif model_type == "mamba":
+        model = CustomMambaModel(
+            max_seq_length=max_seq_length,
+            num_classes=2,
+            static_size=static_size,
+            sensor_count=sensor_count,
+            embedding_dim=86,
+            d_model=86
         )
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
     params = sum([np.prod(p.size()) for p in model_parameters])

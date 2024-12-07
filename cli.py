@@ -139,6 +139,9 @@ def core_function(
         if model_type == "ipnets":
             model_settings["ipnets_imputation_stepsize"] = model_args["ipnets_imputation_stepsize"]
             model_settings["ipnets_reconst_fraction"] = model_args["ipnets_reconst_fraction"]
+        if model_type == "mamba":
+            model_settings["mamba_config"] = model_args["mamba_config"]
+            model_settings["mamba_embedding"] = model_args["mamba_embedding"]
 
         with open(f"{run_path}/model_settings.json", "w") as fp:
             json.dump(model_settings, fp)

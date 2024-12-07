@@ -8,31 +8,89 @@ import torch.nn as nn
 import torch.optim as optim
 import tqdm
 
+class TimeEmbedding(nn.Module):
+    def __init__(self, d_model, frequencies=None):
+        """
+        Initialize TimeEmbedding class.
+
+        Args:
+            d_model (int): Dimension of the output embedding.
+            frequencies (list of int, optional): Frequencies for sinusoidal embeddings (e.g., hourly, daily).
+        """
+        super(TimeEmbedding, self).__init__()
+        self.d_model = d_model
+        self.frequencies = frequencies if frequencies else [1, 24]  # Hourly, daily by default
+        
+        # Learnable linear layer for continuous time embeddings
+        self.time_embedding_layer = nn.Linear(1, d_model)
+        
+        # Combiner for concatenated embeddings (sinusoidal + learnable)
+        self.combiner = nn.Linear(d_model + 2 * len(self.frequencies), d_model)
+
+    def forward(self, timestamps, mask=None):
+        """
+        Forward pass for time embedding.
+
+        Args:
+            timestamps (torch.Tensor): Timestamps of shape [batch_size, seq_len].
+            mask (torch.Tensor, optional): Binary mask of shape [batch_size, seq_len].
+                                            1 indicates valid time steps, 0 indicates missing values.
+
+        Returns:
+            torch.Tensor: Combined time embeddings of shape [batch_size, seq_len, d_model].
+        """
+        # Normalize timestamps to range [0, 1]
+        timestamps_normalized = timestamps / timestamps.max(dim=1, keepdim=True).values
+
+        # Learnable continuous time embeddings
+        continuous_embeddings = self.time_embedding_layer(timestamps_normalized.unsqueeze(-1))  # [batch_size, seq_len, d_model]
+
+        # Sinusoidal embeddings with multiple frequencies
+        sinusoidal_embeddings = torch.cat([
+            torch.sin(2 * torch.pi * timestamps_normalized.unsqueeze(-1) * freq) for freq in self.frequencies
+        ] + [
+            torch.cos(2 * torch.pi * timestamps_normalized.unsqueeze(-1) * freq) for freq in self.frequencies
+        ], dim=-1)  # [batch_size, seq_len, 2 * len(frequencies)]
+
+        # Combine embeddings
+        combined_features = torch.cat([continuous_embeddings, sinusoidal_embeddings], dim=-1)  # [batch_size, seq_len, d_model + sinusoidal_dim]
+        combined_embeddings = self.combiner(combined_features)  # [batch_size, seq_len, d_model]
+
+        # Apply mask if provided
+        if mask is not None:
+            combined_embeddings = combined_embeddings * mask.unsqueeze(-1)  # Zero out masked positions
+
+        return combined_embeddings # [batch_size, seq_len, d_model]
 
 class MambaEmbedding(nn.Module):
-    def __init__(self, sensor_count, embedding_dim, max_seq_length, static_size=8):
+    def __init__(self, sensor_count, embedding_dim, max_seq_length, static_size = 8):
         super(MambaEmbedding, self).__init__()
         self.sensor_count = sensor_count
         self.static_size = static_size
         self.embedding_dim = embedding_dim
         self.max_seq_length = max_seq_length
 
-        # For now the embedding_dim is the same as the sensor_count
+        #For now the embedding_dim is the same as the sensor_count
         self.embedding_dim = sensor_count
 
-        self.sensor_axis_dim_in = 2 * self.sensor_count  # 2 * 37 = 74
+        self.sensor_axis_dim_in = 2 * self.sensor_count # 2 * 37 = 74
 
         # Define the sensor embedding layer
-        self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in, self.sensor_axis_dim_in)
+        self.sensor_embedding = nn.Linear(self.sensor_axis_dim_in , self.sensor_axis_dim_in)
+
 
         # Define the static embedding layer
-        self.static_out = self.static_size + 4  # 8 + 4 = 12
+
+        self.static_out = self.static_size + 4 # 8 + 4 = 12
 
         # Define the static embedding layer
         self.static_embedding = nn.Linear(static_size, self.static_out)
 
         # Define the non-linear merger layer
         self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, self.sensor_axis_dim_in + self.static_out)
+
+        # Define the time embedding layer
+        self.time_embedding = TimeEmbedding(self.sensor_axis_dim_in)
 
     def forward(self, data, static, times, mask):
         """
@@ -45,16 +103,22 @@ class MambaEmbedding(nn.Module):
         Returns:
             torch.Tensor: Encoded output tensor
         """
+
         x_time = torch.clone(data)  # Torch.size(N, F, T)
-        x_time = torch.permute(x_time, (0, 2, 1))  # this now has shape (N, T, F)
+        x_time = torch.permute(x_time, (0, 2, 1)) # this now has shape (N, T, F)
 
         x_sensor_mask = torch.clone(mask)  # (N, F, T)
         x_sensor_mask = torch.permute(x_sensor_mask, (0, 2, 1))  # (N, T, F)
 
+
         x_time = torch.cat([x_time, x_sensor_mask], axis=2)  # (N, T, 2F) #Binary
+
 
         # make sensor embeddings
         x_time = self.sensor_embedding(x_time)
+
+        # add positional encodings
+        x_time = x_time + self.time_embedding(times)
 
         # make static embeddings
         static = self.static_embedding(static)
@@ -62,9 +126,10 @@ class MambaEmbedding(nn.Module):
         x_merged = torch.cat((x_time, static_expanded), axis=-1)
 
         # Merge the embeddings
-        combined = self.nonlinear_merger(x_merged).relu()
+        combined = self.nonlinear_merger(x_merged)
 
         return combined
+    
 
 class ClassificationHead(nn.Module):
     def __init__(self, input_dim, num_classes):

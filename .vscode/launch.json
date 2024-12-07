@@ -1,0 +1,27 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: cli.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cli.py",
+            "args": [
+                "--epochs=10",
+                "--batch_size=16",
+                "--model_type=transformer",
+                "--dropout=0.2",
+                "--attn_dropout=0.1",
+                "--layers=3",
+                "--heads=1",
+                "--pooling=max",
+                "--lr=0.0001",
+                "--output_path=./outputs"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}

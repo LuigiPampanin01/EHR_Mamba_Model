@@ -150,6 +150,9 @@ class MambaEmbedding(nn.Module):
         # make sensor embeddings
         x_time = self.sensor_embedding(x_time)
 
+        # add positional encodings
+        x_time = x_time + self.time_embedding(times, mask)
+
         # make static embeddings
         static = self.static_embedding(static)
         static_expanded = static.unsqueeze(1).repeat(1, x_time.shape[1], 1)
@@ -157,9 +160,6 @@ class MambaEmbedding(nn.Module):
 
         # Merge the embeddings
         combined = self.nonlinear_merger(x_merged)
-
-        # Add time embeddings
-        combined = self.time_embedding(times) + combined
 
         return combined
     

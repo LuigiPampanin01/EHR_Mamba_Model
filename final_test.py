@@ -175,8 +175,14 @@ for epoch in range(100):  # Number of epochs
 
         # Forward pass through the classification head
         logits = classification_head(pooled_output)  # Shape: [batch_size, num_classes]
+        
+        # Initialize softmax
+        softmax = nn.Softmax(dim=-1)
 
-        print(f"Output is :{nn.Softmax(logits)}")
+        # Apply softmax to logits
+        softmax_output = softmax(logits)
+
+        print(f"Softmax output is: {softmax_output}")
 
         break
 

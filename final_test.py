@@ -70,10 +70,16 @@ for epoch in range(100):  # Number of epochs
         # Unpack batch
         data, times, static, labels, mask, delta = batch
 
-        print(f"Data has shape: {data.shape}")
-        print(f"Times has shape: {times.shape}")
-        print(f"Static has shape: {static.shape}")
-        print(f"Mask has shape: {mask.shape}")
+
+        #Legend:
+        # N = Batch size
+        # F = 37 number of series in the time series, Albumin etc etc
+        # T =  Vary from batch to batch, number of registrations
+        # 8 = number of feature
+        print(f"Data has shape: {data.shape}") # (N, F, T)
+        print(f"Times has shape: {times.shape}") #(N, T)
+        print(f"Static has shape: {static.shape}") #(N, 8)
+        print(f"Mask has shape: {mask.shape}") # (N,F,T)
         break
 
         

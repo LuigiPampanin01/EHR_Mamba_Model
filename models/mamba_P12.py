@@ -83,7 +83,7 @@ class MambaEmbedding(nn.Module):
         self.static_embedding = nn.Linear(static_size, self.static_out)
 
         # Define the non-linear merger layer
-        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, self.embedding_dim)
+        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out + self.sensor_axis_dim_in, self.embedding_dim)
 
         # Define the time embedding layer
         self.time_embedding = TimeEmbedding(self.sensor_axis_dim_in)
@@ -122,12 +122,12 @@ class MambaEmbedding(nn.Module):
         time_emb = self.time_embedding(times, mask_handmade)
 
        # add positional encodings
-        x_time = x_time + time_emb
+        x_concat = torch.cat((x_time, time_emb), axis=-1) # (N, T, 2F + time_emb_size)
 
         # make static embeddings
         static = self.static_embedding(static)
         static_expanded = static.unsqueeze(1).repeat(1, x_time.shape[1], 1)
-        x_merged = torch.cat((x_time, static_expanded), axis=-1)
+        x_merged = torch.cat((x_concat, static_expanded), axis=-1)
 
         # Merge the embeddings
         combined = self.nonlinear_merger(x_merged)

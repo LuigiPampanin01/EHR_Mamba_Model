@@ -16,6 +16,7 @@ from models.deep_set_attention import DeepSetAttentionModel
 from models.grud import GRUDModel
 from models.ip_nets import InterpolationPredictionModel
 from models.mamba_P12 import CustomMambaModel
+import time
 
 
 def train_test(
@@ -193,6 +194,8 @@ def train(
 
     for epoch in range(epochs):
 
+        start_time = time.time() #starting time for the epoch
+
         # training step
         model.train().to(device)  # sets training mode
         loss_list = []
@@ -220,6 +223,7 @@ def train(
             loss.backward()
             optimizer.step()
         accum_loss = np.mean(loss_list)
+
 
         print("Loss is", accum_loss)
 
@@ -261,6 +265,9 @@ def train(
             )
 
         print(f"Epoch: {epoch+1}, Train Loss: {accum_loss}, Val Loss: {val_loss}")
+
+        epoch_duration = time.time() - start_time # elapsed time from the start of the epoch
+        print(f"Time elapsed for epoch {epoch+1}: {epoch_duration:.2f} seconds")
 
         # set early stopping
         if early_stop_criteria == "auroc":

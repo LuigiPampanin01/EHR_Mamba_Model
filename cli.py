@@ -24,6 +24,8 @@ import json
 @click.option("--heads", default=1, help="number of attention heads")
 @click.option("--batch_size", default=64, help="batch size")
 @click.option("--layers", default=1, help="number of attention layers")
+@click.option("--hidden_size", default=86, help="size of hidden layer")
+@click.option("--num_hidden_layers", default=4, help="number of hidden layers")
 @click.option("--dataset_id", default="physionet2012", help="filename id of dataset")
 @click.option("--base_path", default="./P12data", help="Path to data folder")
 @click.option("--lr", default=0.001, help="learning rate")
@@ -65,11 +67,15 @@ def core_function(
     lr,
     patience,
     early_stop_criteria,
+    hidden_size,
     **kwargs
 ):
-
+    print(f"Received hidden_size: {hidden_size}")  # Debug
     model_args = kwargs
-
+    model_args["hidden_size"] = hidden_size
+    model_args["num_attention_heads"] = kwargs.get("heads")
+    print(f"Model arguments (debug): {model_args}")  # Debug
+    
     torch.manual_seed(0)
     random.seed(0)
     np.random.seed(0)
@@ -139,24 +145,36 @@ def core_function(
         if model_type == "ipnets":
             model_settings["ipnets_imputation_stepsize"] = model_args["ipnets_imputation_stepsize"]
             model_settings["ipnets_reconst_fraction"] = model_args["ipnets_reconst_fraction"]
+        if model_type == "mamba":
+            model_settings["hidden_size"] = model_args["hidden_size"]
+            model_settings["num_hidden_layers"] = model_args["num_hidden_layers"]
+            model_settings["num_attention_heads"] = model_args["num_attention_heads"]
+            model_settings["dropout"] = model_args["dropout"]
+
 
         with open(f"{run_path}/model_settings.json", "w") as fp:
             json.dump(model_settings, fp)
 
         # run training
-        loss, accuracy_score, auprc_score, auc_score = train_test(
-            train_pair,
-            val_data,
-            test_data,
-            output_path=run_path,
-            model_type=model_type,
-            epochs=epochs,
-            batch_size=batch_size,
-            lr=lr,
-            patience=patience,
-            early_stop_criteria=early_stop_criteria,
-            model_args=model_args,
-        )
+
+        # Run training
+        try:
+            loss, accuracy_score, auprc_score, auc_score = train_test(
+                train_pair,
+                val_data,
+                test_data,
+                output_path=run_path,
+                model_type=model_type,
+                epochs=epochs,
+                batch_size=batch_size,
+                lr=lr,
+                patience=patience,
+                early_stop_criteria=early_stop_criteria,
+                model_args=model_args,
+            )
+        except Exception as e:
+            print(f"Error during training for split {split_index}: {e}")
+            continue  # Skip to the next split
 
         accum_loss.append(loss)
         accum_accuracy.append(accuracy_score)
@@ -180,3 +198,5 @@ def core_function(
 
 if __name__ == "__main__":
     core_function()  
+
+

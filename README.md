@@ -88,5 +88,14 @@ python cli.py --output_path=your/path/here --model_type=ipnets --epochs=100 --ba
 python cli.py --batch_size=2 --epochs=2 --model_type="mamba" --output_path=./
 ```
 
+## [Finetuing Mamba]()
+
+```bash
+python fine_tuning_mamba.py --split=xx
+```
+Dove al posto di xx vanno inserite iniziali di nome e cognome: np, sp, rc, mp, lp.
+Ricordarsi di attivare sessione tmux, visto che runnerà overnight (solo night si spera)
+
+
 # DIY
 You are welcome to fork the repository and make your own modifications :) 

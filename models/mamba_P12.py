@@ -152,6 +152,9 @@ class CustomMambaModel(nn.Module):
         sensor_count=37, 
         embedding_dim=86, 
         d_model=86,
+        num_hidden_layers=4,
+        num_attention_heads=8,
+        dropout=0.2,
         **kwargs
         ):
 
@@ -167,11 +170,11 @@ class CustomMambaModel(nn.Module):
 
         self.mamba_config = MambaConfig(
             hidden_size=d_model,
-            num_hidden_layers=4,
-            num_attention_heads=8,
+            num_hidden_layers=num_hidden_layers,
+            num_attention_heads=num_attention_heads,
             intermediate_size=2 * d_model,
             max_position_embeddings=max_seq_length,
-            dropout=0.2
+            dropout=dropout
         )
         self.embedding = MambaEmbedding(sensor_count, embedding_dim, max_seq_length, static_size)
         self.head = ClassificationHead(input_dim=d_model, num_classes=num_classes)

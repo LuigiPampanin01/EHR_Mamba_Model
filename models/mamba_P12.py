@@ -83,7 +83,8 @@ class MambaEmbedding(nn.Module):
         self.static_embedding = nn.Linear(static_size, self.static_out)
 
         # Define the non-linear merger layer
-        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out + self.sensor_axis_dim_in, self.embedding_dim)
+        #self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out + self.sensor_axis_dim_in, self.embedding_dim)
+        self.nonlinear_merger = nn.Linear(self.sensor_axis_dim_in + self.static_out, self.embedding_dim)
 
         # Define the time embedding layer
         self.time_embedding = TimeEmbedding(self.sensor_axis_dim_in)
@@ -121,8 +122,9 @@ class MambaEmbedding(nn.Module):
 
         time_emb = self.time_embedding(times, mask_handmade)
 
-       # add positional encodings
-        x_concat = torch.cat((x_time, time_emb), axis=-1) # (N, T, 2F + time_emb_size)
+        # add positional encodings
+        #x_concat = torch.cat((x_time, time_emb), axis=-1) # (N, T, 2F + time_emb_size)
+        x_concat = x_time + time_emb
 
         # make static embeddings
         static = self.static_embedding(static)
@@ -150,8 +152,8 @@ class CustomMambaModel(nn.Module):
         num_classes=2,
         static_size=8, 
         sensor_count=37, 
-        embedding_dim=86, 
-        d_model=86,
+        embedding_dim=256, 
+        d_model=256,
         **kwargs
         ):
 
@@ -167,11 +169,11 @@ class CustomMambaModel(nn.Module):
 
         self.mamba_config = MambaConfig(
             hidden_size=d_model,
-            num_hidden_layers=1,
-            num_attention_heads=1,
-            intermediate_size=128,
+            num_hidden_layers=4,
+            num_attention_heads=8,
+            intermediate_size= 2 * d_model,
             max_position_embeddings=max_seq_length,
-            dropout=0.1
+            dropout=0.2
         )
         self.embedding = MambaEmbedding(sensor_count, embedding_dim, max_seq_length, static_size)
         self.head = ClassificationHead(input_dim=d_model, num_classes=num_classes)

@@ -76,5 +76,8 @@ python cli.py --output_path=your/path/here --model_type=ipnets --epochs=100 --ba
 python cli.py --batch_size=32 --epochs=30 --model_type="mamba" --output_path=./my_mamba_training
 ```
 
-# DIY
-You are welcome to fork the repository and make your own modifications :) 
+# Model Evaluation
+
+This repository includes the notebook `evaluate_models.ipynb`, which enables you to evaluate the performance of the models trained in the previous step and compare their results.
+
+The notebook automatically retrieves data from the `outputs` directory and visualizes the results through a graph for easy interpretation.

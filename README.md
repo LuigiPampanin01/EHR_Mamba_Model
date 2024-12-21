@@ -45,18 +45,6 @@ To unzip the data files, run the following command:
 python extract_P12.py
 ```
 
-> **Note:** `--output_path` is a directory where the model checkpoints and logs will be saved. i suggest you to:
-> 1. Create a directory (e.g. `mkdir output`)
-> 2. Run the desired command with `--output_path=./output` (remember the dot)
-
-> **Note 2:** Running one of this commands will create files also in `processed_datasets`
-
-**AT LEAST IN THE BEGINNING PLEASE DO NOT PUSH YOUR OUTPUT DIR OR `./processed_datasets` FILES TO THE REPO ESPECIALLY IF WE DON'T KNOW IF THEY'RE NEEDED**
-
-![image](https://pbs.twimg.com/media/GBeYh5dW4AA4Urp.jpg)
-
-> Non sto scherzando vi sparo
-
 ## [Transformer](https://arxiv.org/abs/1706.03762)
 
 ```bash
@@ -82,10 +70,10 @@ python cli.py --output_path=your/path/here --model_type=grud --epochs=100 --batc
 python cli.py --output_path=your/path/here --model_type=ipnets --epochs=100 --batch_size=32 --lr=0.001 --ipnets_imputation_stepsize=1 --ipnets_reconst_fraction=0.75 --recurrent_dropout=0.3 --recurrent_n_units=32
 ```
 
-## [Mamba]()
+## [Mamba](https://huggingface.co/docs/transformers/main/model_doc/mamba#transformers.MambaConfig)
 
 ```bash
-python cli.py --batch_size=2 --epochs=2 --model_type="mamba" --output_path=./
+python cli.py --batch_size=32 --epochs=30 --model_type="mamba" --output_path=./my_mamba_training
 ```
 
 # DIY

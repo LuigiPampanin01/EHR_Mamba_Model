@@ -73,7 +73,7 @@ python cli.py --output_path=your/path/here --model_type=ipnets --epochs=100 --ba
 ## [Mamba](https://huggingface.co/docs/transformers/main/model_doc/mamba#transformers.MambaConfig)
 
 ```bash
-python cli.py --batch_size=32 --epochs=30 --model_type="mamba" --output_path=./my_mamba_training
+python cli.py --batch_size=32 --epochs=50 --model_type="mamba" --output_path=./my_mamba_training
 ```
 
 # Model Evaluation

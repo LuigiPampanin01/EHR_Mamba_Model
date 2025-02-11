@@ -81,3 +81,13 @@ python cli.py --batch_size=32 --epochs=50 --model_type="mamba" --output_path=./m
 This repository includes the notebook `evaluate_models.ipynb`, which enables you to evaluate the performance of the models trained in the previous step and compare their results.
 
 The notebook automatically retrieves data from the `outputs` directory and visualizes the results through a graph for easy interpretation.
+
+# Team Contribution on Mamba Model
+
+Our team has made significant contributions to the development of the Mamba model, with a particular focus on the embedding layer to classify mortality based on Electronic Health Records (EHR) data. The embedding layer is crucial as it transforms raw EHR data into a format that can be effectively processed by the model, capturing the intricate patterns and relationships inherent in the data. We meticulously designed and optimized this layer to ensure that it could handle the diverse and complex nature of EHR data, which includes time-series measurements, static features, and various clinical notes.
+
+The Mamba model leverages advanced techniques in deep learning and transformer architectures, allowing it to process and learn from large volumes of EHR data efficiently. Our approach included integrating multiple types of embeddings, such as learnable continuous time embeddings and sinusoidal embeddings, to enhance the model's ability to understand temporal patterns and periodicities in the data. Additionally, we incorporated a non-linear merger layer to combine sensor and static embeddings, further enriching the feature representation.
+
+After building the Mamba model, we conducted a comprehensive evaluation by comparing its performance metrics against other state-of-the-art models. We focused on key metrics such as accuracy, loss, Area Under the Precision-Recall Curve (AUPRC), and Area Under the Receiver Operating Characteristic Curve (AUROC). Our results demonstrated that the Mamba model consistently outperformed other models, achieving higher accuracy and better overall performance. This superior capability in mortality classification tasks highlights the effectiveness of our model and its potential impact on predictive analytics in healthcare.
+
+By achieving these advancements, our team has contributed to the field of healthcare analytics, providing a robust tool for mortality prediction based on EHR data. The Mamba model's enhanced accuracy and performance can aid healthcare professionals in making more informed decisions, ultimately improving patient outcomes and advancing the quality of care.
